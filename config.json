@@ -1,0 +1,8 @@
+{
+  "endnotePath": "",
+  "scan": {
+    "scihubHost": "https://sci-hub.ee",
+    "scanInterval": 2,
+    "numberOfProcess": 3
+  }
+}
