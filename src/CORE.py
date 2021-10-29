@@ -295,7 +295,12 @@ class EndNoteModel(object):
             if (not len(srcList)):
                 return False
             url = srcList[0]
-            return url[:url.find('#')]
+            if (not re.match('(http|https):\/\/([\w.]+\/?)\S*', url)):
+                if url.startswith('//'):
+                    url = 'https:' + url
+                if '#' in url:
+                    url = url[:url.find('#')]
+            return url
         except Exception as e:
             logging.error('Error when search reference with no pdf, doi: ' + doi + str(e))
             return False
