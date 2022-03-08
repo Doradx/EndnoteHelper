@@ -20,7 +20,7 @@ if (not os.path.exists(logPath)):
 logging.basicConfig(handlers=[logging.FileHandler(filename=os.path.join(logPath, logFilename),
                                                   encoding='utf-8', mode='a+')],
                     format='%(asctime)s  %(filename)s : %(levelname)s  %(message)s',
-                    level=logging.ERROR)
+                    level=logging.DEBUG)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
@@ -30,7 +30,7 @@ def cleanOldLog():
         now = datetime.datetime.now()
         for logFile in os.listdir(logPath):
             file = os.path.join(logPath, logFile)
-            if (datetime.datetime.strptime(file.split['.'][0], '%Y-%m-%d') + 7 > now):
+            if (datetime.datetime.strptime(logFile.split('.')[0], '%Y-%m-%d') + datetime.timedelta(days=7) > now):
                 continue
             os.remove(file)
     except Exception as e:
@@ -64,6 +64,7 @@ def saveConfig(config, path='config.json'):
     with open(path, 'w') as f:
         json.dump(config, f, indent=2)
         f.close()
+    return
 
 
 configFilePath = 'config.json'
@@ -79,6 +80,7 @@ SCIHUB_HOST = [
     'https://sci-hub.hkvisa.net/',
     'http://sci-hub.ren/'
 ]
+
 SCIHUB_HOST_KEY = 0
 
 

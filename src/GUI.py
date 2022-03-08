@@ -10,6 +10,10 @@ from tkinter import ttk, font, filedialog, simpledialog
 from pystray import Icon, Menu, MenuItem
 from PIL import Image
 from src.CORE import RefMonitor, EndNoteModel, loadConfig, saveConfig, configFilePath
+import logging
+
+logger = logging.getLogger("GUI")
+logger.setLevel(logging.DEBUG)
 
 
 class SystemTray():
@@ -19,6 +23,7 @@ class SystemTray():
 
     def initUi(self):
         quitItem = MenuItem('退出软件', self.quit)
+        aboutItem = MenuItem('关于作者', self.about)
         changeEndnoteDbItem = MenuItem('路径配置', self.openSetting)
         openConfigFileItem = MenuItem('高级配置', self.advancedSetting)
         statusItem = MenuItem('下载列表', self.openTaskList)
@@ -27,13 +32,15 @@ class SystemTray():
         self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndnoteHelper - Dorad", Menu(
             statusItem, MenuItem('服务状态', Menu(
                 RunningItem, StopItem
-            )), changeEndnoteDbItem, openConfigFileItem, quitItem
+            )), changeEndnoteDbItem, openConfigFileItem, aboutItem, quitItem
         ))
+
         self.icon.run()
 
     def startService(self):
-        self.config = loadConfig()
+        self.config = loadConfig(configFilePath)
         if (not len(self.config['endnotePath']) or not os.path.exists(self.config['endnotePath'])):
+            logger.debug('There is no endnote path.')
             self.openSetting()
             return False
         if (hasattr(self, 'refMonitor') and self.refMonitor):
@@ -53,6 +60,7 @@ class SystemTray():
         return not self.isRunning()
 
     def restartService(self):
+        logger.debug('Restarting...')
         self.stopService()
         self.startService()
 
@@ -63,6 +71,7 @@ class SystemTray():
     def openTaskList(self):
         # if (hasattr(self, 'settingWindow') and self.settingWindow):
         #     self.settingWindow.destory()
+        logger.debug('Stopping')
         endnoteModel = EndNoteModel(os.path.dirname(self.config['endnotePath']),
                                     os.path.basename(self.config['endnotePath']).replace('.enl', ''))
         taskWindow = TaskListWindow(endnoteModel)
@@ -72,7 +81,8 @@ class SystemTray():
     def openSetting(self):
         changeDbWindow = EndnoteDbPathSettingWindow(self.config)
         changeDbWindow.mainloop()
-        self.config = loadConfig()
+        # setting closed
+        self.config = loadConfig(configFilePath)
         if (len(self.config['endnotePath']) and os.path.exists(self.config['endnotePath'])):
             self.restartService()
         else:
@@ -109,7 +119,7 @@ class EndnoteDbPathSettingWindow(tk.Tk):
         # self.resizable(False, False)
         fontStyle = font.Font(family="Microsoft YaHei", size=14)
         tk.Label(self, text="EndNote Helper Setting", font=("Microsoft YaHei", 20)).pack(side=tk.TOP, expand=tk.TRUE)
-        tk.Label(self, text="Dorad, blog@cuger.cn", font=("Microsoft YaHei", 12)).pack(side=tk.TOP, expand=tk.TRUE)
+        tk.Label(self, text="Dorad, cug.xia@gmail.com", font=("Microsoft YaHei", 12)).pack(side=tk.TOP, expand=tk.TRUE)
         p = tk.Frame(self)
         p.pack(side=tk.TOP, expand=tk.TRUE)
         tk.Label(p, text="数据库路径:", font=fontStyle).grid(row=0, column=0, padx=(10, 10), pady=(10, 0))
@@ -123,6 +133,7 @@ class EndnoteDbPathSettingWindow(tk.Tk):
     def selectEndnotePath(self):
         filename = filedialog.askopenfilename(filetypes=[('EndNote Library', '*.enl')])
         if (not filename):
+            logger.warning('No path selected for Endnote Database!')
             return
         self.endnotePath = os.path.abspath(filename)
         self.save()
@@ -130,7 +141,7 @@ class EndnoteDbPathSettingWindow(tk.Tk):
     def save(self):
         try:
             self.config['endnotePath'] = self.endnotePath
-            saveConfig(self.config)
+            saveConfig(self.config, configFilePath)
             self.destroy()
         except Exception as e:
             return False
@@ -167,6 +178,8 @@ class TaskListWindow(tk.Tk):
     def clearAndPushRefList(self, refs):
         for item in self.table.get_children():
             self.table.delete(item)
+        if (not refs):
+            return False
         for i in range(len(refs)):
             r = refs[i]
             self.table.insert('', tk.END,
@@ -175,7 +188,10 @@ class TaskListWindow(tk.Tk):
 
     def refresh(self):
         if self.running:
-            self.clearAndPushRefList(self.enModel.getRefSearchRecords())
+            refs = self.enModel.getRefSearchRecords()
+            if (not refs):
+                return False
+            self.clearAndPushRefList(refs)
             self.after(1000, self.refresh)
 
     def destroy(self):
