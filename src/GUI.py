@@ -29,7 +29,7 @@ class SystemTray():
         statusItem = MenuItem('Task View', self.openTaskList)
         RunningItem = MenuItem('Start', self.startService, checked=self.isRunning)
         StopItem = MenuItem('Stop', self.stopService, checked=self.isStop)
-        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndNoteHelper - v0.1.3", Menu(
+        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndNoteHelper - v0.1.4", Menu(
             statusItem, MenuItem('Service State', Menu(
                 RunningItem, StopItem
             )), changeEndnoteDbItem, openConfigFileItem, aboutItem, quitItem

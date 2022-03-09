@@ -28,6 +28,8 @@ This is a green software which doesn't need to be installed.
 For better management, it is recommended that you can copy it to a disk where you often store your software, such as the D drive.
 
 ## Step 3, Just run the toolbox.
+**Quit the EndNote program first!**
+
 Double click the `EndNoteHelper.exe`, and the setting window will appear, just as shown bellow.
 
 ![EndNote Database Setting](https://github.com/Doradx/EndnoteHelper/raw/master/images/databaseSetting.png)
@@ -52,6 +54,12 @@ The task list will show all the papers which don't have attachment now, and all 
 
 ![Task View of EndNote Helper](https://github.com/Doradx/EndnoteHelper/raw/master/images/taskView.png)
 
+## The service is running, but the Task View (Reference List) is empty and nothing has changed?
+
+**Please run the toolbox before you start EndNote program, then open EndNote after this toolbox is running correctly. **
+
+Because the database will be locked when EndNote is running.
+
 # Others
 
 For better use, you can send `EndNote Helper` a shortcut to the desktop.
@@ -62,4 +70,4 @@ If you find any problem with this software, please create new issue in [GitHub I
 ## Donate
 Thank you for your donation, it will help the subsequent development of "EndNote Helper".
 
-![Wechat & Alipay](https://blog.cuger.cn/images/pay.jpg)
+![Wechat & Alipay](https://github.com/Doradx/EndnoteHelper/raw/master/images/donate.jpg)
