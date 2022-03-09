@@ -168,7 +168,10 @@ class TaskListWindow(tk.Tk):
         tv.column("UPDATED AT", minwidth=80, anchor='w', stretch=tk.NO)
         for col in list(columns):
             tv.heading(col, text=col)
-        tv.tag_configure('Succeed', background='green')
+        tv.tag_configure('Succeed', background='#99CC99')
+        tv.tag_configure('Searching', background='#FFCC99')
+        tv.tag_configure('Downloading', background='#CCFF99')
+        tv.tag_configure('Failed', background='#CCCCCC')
         scrollbar = ttk.Scrollbar(self, orient="vertical")
         tv.configure(yscroll=scrollbar.set, selectmode="browse")
         scrollbar.config(command=tv.yview)
