@@ -81,7 +81,7 @@ SCIHUB_HOST = [
     'http://sci-hub.ren/'
 ]
 
-SCIHUB_HOST_KEY = 0
+SCIHUB_HOST_KEY = 1
 
 
 # 状态: 队列中/查找中/无PDF/存储失败/
@@ -236,7 +236,8 @@ class EndNoteModel(object):
         try:
             conn = sqlite3.connect(self.helpDB)
             cursor = conn.cursor()
-            cursor.execute("UPDATE refs_helper SET status='%s',remark='%s' WHERE id = %d" % (status, remark, ref['id']))
+            cursor.execute(
+                """UPDATE refs_helper SET status="%s",remark="%s" WHERE id = %d""" % (status, remark, ref['id']))
             conn.commit()
             return True
         except Exception as e:
@@ -290,7 +291,7 @@ class EndNoteModel(object):
                 host = host[0]
             r = requests.get(host + '/' + doi, headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE'
-            })
+            }, timeout=10)
             if (r.status_code != 200):
                 return False
             srcList = html.fromstring(r.text).xpath('//*[@id="pdf"]/@src')
@@ -350,23 +351,24 @@ class RefHandler(mp.Process):
                 continue
             ref = self.taskQ.get()
             logging.debug('Got task %d, doi: %s, title: %s' % (ref['id'], ref['doi'], ref['title']))
-            self.endModel.updateRefStatusInHelperDb(ref, '查找中', '')
+            self.endModel.updateRefStatusInHelperDb(ref, 'Searching', '')
             pdfUrl = self.endModel.searchPdfBasedOnDoi(ref['doi'])
             if (not pdfUrl):
-                self.endModel.updateRefStatusInHelperDb(ref, '失败', '未找到PDF')
+                logging.debug("Can't find the PDF in sci-hub.")
+                self.endModel.updateRefStatusInHelperDb(ref, 'Failed', "Can't find the PDF in sci-hub.")
                 continue
             if (not self.running.value):
                 continue
-            self.endModel.updateRefStatusInHelperDb(ref, '下载中', pdfUrl)
+            self.endModel.updateRefStatusInHelperDb(ref, 'Downloading', pdfUrl)
             pdfPath = self.endModel.downloadPdf(pdfUrl, 'download')
             if (not pdfPath):
-                self.endModel.updateRefStatusInHelperDb(ref, '失败', 'PDF下载失败')
+                self.endModel.updateRefStatusInHelperDb(ref, 'Failed', 'Failed to download the PDF file.')
                 continue
             savePdfStatus = self.endModel.savePdf(ref, pdfPath)
             if (not savePdfStatus):
-                self.endModel.updateRefStatusInHelperDb(ref, '失败', 'PDF保存失败')
+                self.endModel.updateRefStatusInHelperDb(ref, 'Failed', 'Failed to save the PDF file.')
                 continue
-            self.endModel.updateRefStatusInHelperDb(ref, '成功', '成功关联PDF')
+            self.endModel.updateRefStatusInHelperDb(ref, 'Succeed', 'Succeed to link the PDF.')
         logging.info('Process RefHandler stopped.')
 
 
@@ -398,7 +400,7 @@ class RefMonitor(mp.Process):
             # save to ref helper
             for ref in refs:
                 self.taskQ.put(ref)
-                self.endnoteModel.updateRefStatusInHelperDb(ref, '队列中', '')
+                self.endnoteModel.updateRefStatusInHelperDb(ref, 'Waiting', '')
             time.sleep(self.scanInterval)
         for i in range(0, self.refHandlerNumber):
             self.refHandlerProcesses[i].join()

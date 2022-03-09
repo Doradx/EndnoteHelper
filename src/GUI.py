@@ -22,15 +22,15 @@ class SystemTray():
         self.initUi()
 
     def initUi(self):
-        quitItem = MenuItem('退出软件', self.quit)
-        aboutItem = MenuItem('关于作者', self.about)
-        changeEndnoteDbItem = MenuItem('路径配置', self.openSetting)
-        openConfigFileItem = MenuItem('高级配置', self.advancedSetting)
-        statusItem = MenuItem('下载列表', self.openTaskList)
-        RunningItem = MenuItem('开启服务', self.startService, checked=self.isRunning)
-        StopItem = MenuItem('停止服务', self.stopService, checked=self.isStop)
-        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndnoteHelper - Dorad", Menu(
-            statusItem, MenuItem('服务状态', Menu(
+        quitItem = MenuItem('Exit', self.quit)
+        aboutItem = MenuItem('About Author', self.about)
+        changeEndnoteDbItem = MenuItem('Database Setting', self.openSetting)
+        openConfigFileItem = MenuItem('Advance Setting', self.advancedSetting)
+        statusItem = MenuItem('Task View', self.openTaskList)
+        RunningItem = MenuItem('Start', self.startService, checked=self.isRunning)
+        StopItem = MenuItem('Stop', self.stopService, checked=self.isStop)
+        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndNoteHelper - v0.1.3", Menu(
+            statusItem, MenuItem('Service State', Menu(
                 RunningItem, StopItem
             )), changeEndnoteDbItem, openConfigFileItem, aboutItem, quitItem
         ))
@@ -122,7 +122,7 @@ class EndnoteDbPathSettingWindow(tk.Tk):
         tk.Label(self, text="Dorad, cug.xia@gmail.com", font=("Microsoft YaHei", 12)).pack(side=tk.TOP, expand=tk.TRUE)
         p = tk.Frame(self)
         p.pack(side=tk.TOP, expand=tk.TRUE)
-        tk.Label(p, text="数据库路径:", font=fontStyle).grid(row=0, column=0, padx=(10, 10), pady=(10, 0))
+        tk.Label(p, text="Database:", font=fontStyle).grid(row=0, column=0, padx=(10, 10), pady=(10, 0))
         endnotePathEntry = tk.Entry(p, width=30)
         endnotePathEntry.insert(0, self.endnotePath)
         endnotePathEntry.grid(row=0, column=1, columnspan=1, padx=(10, 10), pady=(10, 0))
@@ -158,17 +158,17 @@ class TaskListWindow(tk.Tk):
     def initUI(self):
         self.title('Reference List - Dorad, https://blog.cuger.cn')
         self.geometry('900x600')
-        columns = ("ID", "标题", "DOI", "状态", "备注", "更新于")
+        columns = ("ID", "TITLE", "DOI", "STATE", "REMARK", "UPDATED AT")
         tv = ttk.Treeview(self, show='headings', columns=columns, height=20)
         tv.column("ID", width=50, anchor='center', stretch=tk.NO)
-        tv.column("标题", minwidth=200, anchor='w')
+        tv.column("TITLE", minwidth=200, anchor='w')
         tv.column("DOI", minwidth=80, anchor='w')
-        tv.column("状态", minwidth=50, width=80, anchor='center', stretch=tk.NO)
-        tv.column("备注", minwidth=60, anchor='center')
-        tv.column("更新于", minwidth=80, anchor='w', stretch=tk.NO)
+        tv.column("STATE", minwidth=50, width=80, anchor='center', stretch=tk.NO)
+        tv.column("REMARK", minwidth=60, anchor='center')
+        tv.column("UPDATED AT", minwidth=80, anchor='w', stretch=tk.NO)
         for col in list(columns):
             tv.heading(col, text=col)
-        tv.tag_configure('成功', background='green')
+        tv.tag_configure('Succeed', background='green')
         scrollbar = ttk.Scrollbar(self, orient="vertical")
         tv.configure(yscroll=scrollbar.set, selectmode="browse")
         scrollbar.config(command=tv.yview)
