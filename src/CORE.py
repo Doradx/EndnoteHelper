@@ -20,7 +20,7 @@ if (not os.path.exists(logPath)):
 logging.basicConfig(handlers=[logging.FileHandler(filename=os.path.join(logPath, logFilename),
                                                   encoding='utf-8', mode='a+')],
                     format='%(asctime)s  %(filename)s : %(levelname)s  %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.ERROR)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
@@ -71,14 +71,9 @@ configFilePath = 'config.json'
 CONFIG = loadConfig(configFilePath)
 
 SCIHUB_HOST = [
-    'https://sci-hub.ee/',
-    'https://sci-hub.se/',
-    'https://sci-hub.mksa.top/',
-    'https://sci-hub.tf/',
-    'https://sci-hub.st/',
-    'https://sci.hubg.org/',
-    'https://sci-hub.hkvisa.net/',
-    'http://sci-hub.ren/'
+    'https://sci-hub.se',
+    'https://sci-hub.st',
+    'https://sci-hub.ru',
 ]
 
 SCIHUB_HOST_KEY = 1
@@ -101,12 +96,12 @@ class EndNoteModel(object):
             if (firstTime):
                 self.__cleanHelperRecords()
             refs = self.__searchReferencesWithDoiNoPdf()
-            insertRefs = [(r['id'], r['doi'], r['year'], r['title'], r['author']) for r in refs]
+            insertRefs = [(r['id'], r['doi'], r['year'], r['title'], r['author'], 'Waiting', '') for r in refs]
             # push refs to helper database
             conn = sqlite3.connect(self.helpDB)
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.executemany("INSERT INTO refs_helper(id,doi,year,title,author) VALUES(?,?,?,?,?)", insertRefs)
+            cursor.executemany("INSERT INTO refs_helper(id,doi,year,title,author,status,remark) VALUES(?,?,?,?,?,?,?)", insertRefs)
             conn.commit()
             # if (firstTime):
             #     cursor.execute("SELECT * FROM refs_helper WHERE status IS NULL OR status NOT LIKE '成功'")
@@ -286,7 +281,7 @@ class EndNoteModel(object):
             host = re.findall(r"(https?\:\/\/[\w.\-]+)", CONFIG['scan']['scihubHost'])
             if (not len(host)):
                 logging.error('SCI-HUB host is error, host: %s' % (CONFIG['scan']['scihubHost']))
-                host = 'https://sci-hub.ee'
+                host = 'https://sci-hub.se'
             else:
                 host = host[0]
             r = requests.get(host + '/' + doi, headers={
@@ -322,6 +317,8 @@ class EndNoteModel(object):
                 filename = re.findall("\/([\w\-_]+.pdf)", url)[0]
             if ("Content-Disposition" in r.headers.keys() and r.headers["Content-Disposition"]):
                 filename = re.findall("filename=(.+)", r.headers["Content-Disposition"])[0]
+            if not os.path.exists(savePath):
+                os.makedirs(savePath)
             fullFilenameWithPath = os.path.join(savePath, filename)
             if (not os.path.exists(savePath)):
                 os.makedirs(savePath)
@@ -349,6 +346,7 @@ class RefHandler(mp.Process):
             if self.taskQ.empty():
                 time.sleep(5)
                 continue
+            time.sleep(0.5)
             ref = self.taskQ.get()
             logging.debug('Got task %d, doi: %s, title: %s' % (ref['id'], ref['doi'], ref['title']))
             self.endModel.updateRefStatusInHelperDb(ref, 'Searching', '')
@@ -400,10 +398,11 @@ class RefMonitor(mp.Process):
             # save to ref helper
             for ref in refs:
                 self.taskQ.put(ref)
-                self.endnoteModel.updateRefStatusInHelperDb(ref, 'Waiting', '')
+                self.endnoteModel.updateRefStatusInHelperDb(ref, 'Queueing', 'Queueing for search.')
             time.sleep(self.scanInterval)
         for i in range(0, self.refHandlerNumber):
-            self.refHandlerProcesses[i].join()
+            self.refHandlerProcesses[i].terminate()
+            # self.refHandlerProcesses[i].join()
             logging.debug('Handler %d stop.' % (i))
         logging.info('Process RefMonitor stopped.')
 

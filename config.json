@@ -1,7 +1,7 @@
 {
   "endnotePath": "",
   "scan": {
-    "scihubHost": "https://sci-hub.se",
+    "scihubHost": "https://sci-hub.ru",
     "scanInterval": 1,
     "numberOfProcess": 3
   }

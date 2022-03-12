@@ -13,7 +13,7 @@ from src.CORE import RefMonitor, EndNoteModel, loadConfig, saveConfig, configFil
 import logging
 
 logger = logging.getLogger("GUI")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 
 class SystemTray():
@@ -29,7 +29,7 @@ class SystemTray():
         statusItem = MenuItem('Task View', self.openTaskList)
         RunningItem = MenuItem('Start', self.startService, checked=self.isRunning)
         StopItem = MenuItem('Stop', self.stopService, checked=self.isStop)
-        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndNoteHelper - v0.1.4", Menu(
+        self.icon = Icon("EndnoteHelper", Image.open('./res/icon.png'), "EndNoteHelper - v0.1.5", Menu(
             statusItem, MenuItem('Service State', Menu(
                 RunningItem, StopItem
             )), changeEndnoteDbItem, openConfigFileItem, aboutItem, quitItem
@@ -71,12 +71,15 @@ class SystemTray():
     def openTaskList(self):
         # if (hasattr(self, 'settingWindow') and self.settingWindow):
         #     self.settingWindow.destory()
-        logger.debug('Stopping')
+        if hasattr(self, 'taskWindow'):
+            return
+        logger.debug('open task list')
         endnoteModel = EndNoteModel(os.path.dirname(self.config['endnotePath']),
                                     os.path.basename(self.config['endnotePath']).replace('.enl', ''))
         taskWindow = TaskListWindow(endnoteModel)
         self.taskWindow = taskWindow
         self.taskWindow.mainloop()
+        del self.taskWindow
 
     def openSetting(self):
         changeDbWindow = EndnoteDbPathSettingWindow(self.config)
@@ -97,8 +100,14 @@ class SystemTray():
 
     def quit(self):
         self.stopService()
+        if hasattr(self, 'taskWindow'):
+            self.taskWindow.quit()
+        self.refMonitor.stop()
+        # self.refMonitor.terminate()
+        self.refMonitor.join()
         if (hasattr(self, 'icon') and self.icon):
             self.icon.stop()
+        exit()
 
 
 class EndnoteDbPathSettingWindow(tk.Tk):
