@@ -11,7 +11,7 @@ lxml==4.9.1
 ndg-httpsclient==0.5.1
 pdfminer.six==20211012
 pefile==2021.9.3
-Pillow==9.3.0
+Pillow==10.0.1
 pyasn1==0.4.8
 pycparser==2.20
 pyinstaller==4.10
