@@ -19,7 +19,7 @@ pyinstaller-hooks-contrib==2022.0
 pyOpenSSL==22.0.0
 pystray==0.18.0
 pywin32-ctypes==0.2.0
-requests==2.27.1
+requests==2.32.4
 six==1.16.0
 typing_extensions==4.1.1
 urllib3==1.26.7
